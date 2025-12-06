@@ -4,7 +4,7 @@ import SwiftUI
 struct kaimono_todoApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ShoppingListView()
         }
     }
 }
