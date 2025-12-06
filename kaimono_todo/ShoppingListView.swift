@@ -122,6 +122,7 @@ struct ShoppingItemRow: View {
                     .strikethrough(item.isCompleted)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture {
             if !isEditing {
