@@ -120,6 +120,7 @@ struct ShoppingItemRow: View {
             } else {
                 Text(item.text)
                     .strikethrough(item.isCompleted)
+                    .foregroundColor(item.isCompleted ? .gray : .primary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
