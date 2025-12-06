@@ -4,6 +4,7 @@ struct ShoppingListView: View {
     @StateObject private var store = ShoppingListStore()
     @State private var editingItemId: UUID?
     @FocusState private var focusedItemId: UUID?
+    @State private var isSubmitting = false
 
     var body: some View {
         NavigationStack {
@@ -15,7 +16,8 @@ struct ShoppingListView: View {
                         focusedItemId: $focusedItemId,
                         onTap: { toggleCompletion(item) },
                         onLongPress: { startEditing(item) },
-                        onTextChange: { newText in updateText(item, newText) }
+                        onTextChange: { newText in updateText(item, newText) },
+                        onSubmit: addItemAndContinue
                     )
                 }
             }
@@ -33,7 +35,7 @@ struct ShoppingListView: View {
                 }
             }
             .onChange(of: focusedItemId) { oldValue, newValue in
-                if newValue == nil {
+                if newValue == nil && !isSubmitting {
                     // 編集終了時、空のアイテムは削除
                     if let editingId = editingItemId,
                        let item = store.items.first(where: { $0.id == editingId }),
@@ -42,6 +44,10 @@ struct ShoppingListView: View {
                         store.save()
                     }
                     editingItemId = nil
+                }
+                // 新しいフォーカスがあればSubmit完了
+                if newValue != nil {
+                    isSubmitting = false
                 }
             }
         }
@@ -99,6 +105,29 @@ struct ShoppingListView: View {
         store.items.removeAll { $0.isCompleted }
         store.save()
     }
+
+    // Returnキーで次のアイテム追加
+    private func addItemAndContinue() {
+        guard let currentEditingId = editingItemId,
+              let currentItem = store.items.first(where: { $0.id == currentEditingId }),
+              !currentItem.text.isEmpty else {
+            return
+        }
+
+        isSubmitting = true
+
+        // 編集中以外で空のアイテムが既にある場合は、そのアイテムを編集
+        if let emptyItem = store.items.first(where: { $0.text.isEmpty && $0.id != currentEditingId }) {
+            editingItemId = emptyItem.id
+            focusedItemId = emptyItem.id
+        } else {
+            let newItem = ShoppingItem(text: "")
+            store.items.insert(newItem, at: 0)
+            editingItemId = newItem.id
+            focusedItemId = newItem.id
+            store.save()
+        }
+    }
 }
 
 struct ShoppingItemRow: View {
@@ -108,15 +137,20 @@ struct ShoppingItemRow: View {
     let onTap: () -> Void
     let onLongPress: () -> Void
     let onTextChange: (String) -> Void
+    let onSubmit: () -> Void
 
     var body: some View {
         HStack {
             if isEditing {
-                TextField("アイテム名", text: .init(
+                TextField("", text: .init(
                     get: { item.text },
                     set: { onTextChange($0) }
                 ))
                 .focused($focusedItemId, equals: item.id)
+                .submitLabel(.next)
+                .onSubmit {
+                    onSubmit()
+                }
             } else {
                 Text(item.text)
                     .strikethrough(item.isCompleted)
