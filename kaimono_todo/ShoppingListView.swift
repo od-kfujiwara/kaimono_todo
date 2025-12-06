@@ -45,6 +45,10 @@ struct ShoppingListView: View {
                 }
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            focusedItemId = nil
+        }
     }
 
     // 未完了を上、完了済みを下に表示
