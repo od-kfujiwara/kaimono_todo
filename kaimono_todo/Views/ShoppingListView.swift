@@ -20,8 +20,10 @@ struct ShoppingListView: View {
                         onSubmit: addItemAndContinue
                     )
                 }
+                .onMove(perform: moveItem)
             }
             .listStyle(.plain)
+            .environment(\.editMode, .constant(.active))
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: deleteCompleted) {
@@ -128,6 +130,12 @@ struct ShoppingListView: View {
             focusedItemId = newItem.id
             store.save()
         }
+    }
+
+    // アイテムの並び替え
+    private func moveItem(from source: IndexSet, to destination: Int) {
+        store.items.move(fromOffsets: source, toOffset: destination)
+        store.save()
     }
 }
 
