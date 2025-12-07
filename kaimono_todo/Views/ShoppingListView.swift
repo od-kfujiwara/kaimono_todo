@@ -9,7 +9,7 @@ struct ShoppingListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(sortedItems) { item in
+                ForEach(store.items) { item in
                     ShoppingItemRow(
                         item: item,
                         isEditing: editingItemId == item.id,
@@ -57,16 +57,17 @@ struct ShoppingListView: View {
         }
     }
 
-    // 未完了を上、完了済みを下に表示
-    private var sortedItems: [ShoppingItem] {
-        store.items.sorted { !$0.isCompleted && $1.isCompleted }
-    }
-
     // 完了/未完了の切り替え
     private func toggleCompletion(_ item: ShoppingItem) {
         guard editingItemId != item.id else { return }
         if let index = store.items.firstIndex(where: { $0.id == item.id }) {
             store.items[index].isCompleted.toggle()
+
+            // 完了アイテムを最下部に移動
+            withAnimation {
+                store.items.sort { !$0.isCompleted && $1.isCompleted }
+            }
+
             store.save()
         }
     }
@@ -126,46 +127,6 @@ struct ShoppingListView: View {
             editingItemId = newItem.id
             focusedItemId = newItem.id
             store.save()
-        }
-    }
-}
-
-struct ShoppingItemRow: View {
-    let item: ShoppingItem
-    let isEditing: Bool
-    @FocusState.Binding var focusedItemId: UUID?
-    let onTap: () -> Void
-    let onLongPress: () -> Void
-    let onTextChange: (String) -> Void
-    let onSubmit: () -> Void
-
-    var body: some View {
-        HStack {
-            if isEditing {
-                TextField("", text: .init(
-                    get: { item.text },
-                    set: { onTextChange($0) }
-                ))
-                .focused($focusedItemId, equals: item.id)
-                .submitLabel(.next)
-                .onSubmit {
-                    onSubmit()
-                }
-            } else {
-                Text(item.text)
-                    .strikethrough(item.isCompleted)
-                    .foregroundColor(item.isCompleted ? .gray : .primary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if !isEditing {
-                onTap()
-            }
-        }
-        .onLongPressGesture {
-            onLongPress()
         }
     }
 }
