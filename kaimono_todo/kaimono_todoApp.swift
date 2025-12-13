@@ -20,12 +20,11 @@ struct ContentView: View {
             ForEach(0..<settings.listCount, id: \.self) { index in
                 ShoppingListView(listId: index)
                     .tabItem {
-                        Label(
-                            settings.listNames[index].isEmpty
-                                ? "リスト\(index + 1)"
-                                : settings.listNames[index],
-                            systemImage: settings.iconForIndex(index)
-                        )
+                        Label {
+                            Text(tabTitle(for: index))
+                        } icon: {
+                            Image(systemName: settings.iconForIndex(index))
+                        }
                     }
                     .tag(index)
             }
@@ -42,4 +41,20 @@ struct ContentView: View {
 
 #Preview {
     ContentView(settings: AppSettings())
+}
+
+extension ContentView {
+    // タブのタイトルは一定文字数で省略し、タブ幅が揃うようにする
+    private func tabTitle(for index: Int) -> String {
+        let base = settings.listNames[index].isEmpty
+            ? "リスト\(index + 1)"
+            : settings.listNames[index]
+
+        let limit = 8
+        if base.count > limit {
+            let endIndex = base.index(base.startIndex, offsetBy: max(limit - 3, 1))
+            return String(base[..<endIndex]) + "..."
+        }
+        return base
+    }
 }
