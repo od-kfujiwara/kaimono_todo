@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
+    @FocusState private var focusedField: Int?
 
     var body: some View {
         NavigationStack {
@@ -28,6 +29,7 @@ struct SettingsView: View {
                                     settings.listNames[index] = limited
                                 }
                             ))
+                            .focused($focusedField, equals: index)
                         }
                     }
                 }
@@ -39,6 +41,23 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("設定")
+            .safeAreaInset(edge: .bottom) {
+                if focusedField != nil {
+                    HStack {
+                        Spacer()
+                        Button("完了") {
+                            focusedField = nil
+                        }
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .buttonStyle(.bordered)
+                        .controlSize(.regular)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 8)
+                    .background(.clear)
+                }
+            }
         }
     }
 }

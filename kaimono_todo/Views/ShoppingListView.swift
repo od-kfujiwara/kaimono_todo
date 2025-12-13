@@ -53,6 +53,23 @@ struct ShoppingListView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                if focusedItemId != nil {
+                    HStack {
+                        Spacer()
+                        Button("完了") {
+                            focusedItemId = nil
+                        }
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .buttonStyle(.bordered)
+                        .controlSize(.regular)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 8)
+                    .background(.clear)
+                }
+            }
             .onChange(of: focusedItemId) { oldValue, newValue in
                 if newValue == nil && !isSubmitting {
                     // 編集終了時、空のアイテムは削除
