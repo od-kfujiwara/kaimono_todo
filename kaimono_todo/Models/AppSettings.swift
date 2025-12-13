@@ -35,7 +35,14 @@ class AppSettings: ObservableObject {
         "square.and.pencil", "note.text",
         "checkmark.circle", "checkmark.circle.fill",
         "star", "star.fill",
-        "heart", "heart.fill"
+        "heart", "heart.fill",
+        "pills", "cross.case",
+        "bandage", "stethoscope",
+        "shippingbox", "shippingbox.fill",
+        "gift", "takeoutbag.and.cup.and.straw",
+        "sofa", "bed.double",
+        "lamp.desk", "lightbulb",
+        "cart.badge.plus", "cart.badge.minus"
     ]
 
     init() {
