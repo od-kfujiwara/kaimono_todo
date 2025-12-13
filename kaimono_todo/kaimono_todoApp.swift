@@ -36,6 +36,7 @@ struct ContentView: View {
                 }
                 .tag(999)
         }
+        .tint(.appAccent)
     }
 }
 

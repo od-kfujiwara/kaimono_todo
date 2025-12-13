@@ -49,7 +49,7 @@ struct ShoppingListView: View {
                 if tourStage == .addFromPlus {
                     calloutBubble(title: TourCopy.addTitle,
                                   iconName: "plus",
-                                  color: .red,
+                                  color: .appAccent,
                                   arrowOffset: 220,
                                   width: 200)
                         .padding(.trailing, 12)
@@ -62,7 +62,7 @@ struct ShoppingListView: View {
                 if tourStage == .longPressEdit {
                     calloutBubble(title: TourCopy.editTitle,
                                   iconName: "hand.point.up.left",
-                                  color: .red,
+                                  color: .appAccent,
                                   arrowOffset: 32,
                                   width: 200)
                         .padding(.leading, 12)
@@ -75,8 +75,8 @@ struct ShoppingListView: View {
                 if shouldShowDeleteCallout {
                     calloutBubble(title: TourCopy.deleteTitle,
                                   iconName: "trash",
-                                  color: .red,
-                                  arrowOffset: 32,
+                                  color: .appAccent,
+                                  arrowOffset: 20,
                                   width: 200)
                         .padding(.leading, 12)
                         .padding(.top, 8)

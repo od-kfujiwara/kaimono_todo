@@ -24,7 +24,7 @@ struct IconPickerView: View {
                                     .frame(width: 60, height: 60)
                                     .background(
                                         settings.listIcons[listIndex] == icon
-                                            ? Color.blue.opacity(0.2)
+                                            ? Color.appAccent.opacity(0.2)
                                             : Color.gray.opacity(0.1)
                                     )
                                     .cornerRadius(8)

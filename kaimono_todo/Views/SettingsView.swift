@@ -23,7 +23,7 @@ struct SettingsView: View {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "hand.tap")
                                 .font(.title2)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.appAccent)
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("アイコンをタップして変更できます")
                                     .font(.subheadline)
@@ -35,10 +35,10 @@ struct SettingsView: View {
                         }
                         .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.blue.opacity(0.08))
+                        .background(Color.appAccent.opacity(0.08))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                                .stroke(Color.appAccent.opacity(0.2), lineWidth: 1)
                         )
                         .cornerRadius(12)
                     }
