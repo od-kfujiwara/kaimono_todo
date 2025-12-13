@@ -18,6 +18,7 @@ struct ShoppingItem: Identifiable, Codable {
 class ShoppingListStore: ObservableObject {
     @Published var items: [ShoppingItem] = []
     private let saveKey: String
+    private var saveWorkItem: DispatchWorkItem?
 
     init(listId: Int) {
         self.saveKey = "shopping_items_\(listId)"
@@ -38,6 +39,16 @@ class ShoppingListStore: ObservableObject {
         if let encoded = try? JSONEncoder().encode(items) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
+    }
+
+    // 入力や並び替えで多発する保存をまとめて実行し、書き込み負荷を減らす
+    func saveDebounced(delay: TimeInterval = 0.25) {
+        saveWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.save()
+        }
+        saveWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
     }
 
     // UserDefaultsから読み込み

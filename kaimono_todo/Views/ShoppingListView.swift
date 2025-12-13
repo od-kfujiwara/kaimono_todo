@@ -118,7 +118,7 @@ struct ShoppingListView: View {
     private func updateText(_ item: ShoppingItem, _ newText: String) {
         if let index = store.items.firstIndex(where: { $0.id == item.id }) {
             store.items[index].text = newText
-            store.save()
+            store.saveDebounced()
         }
     }
 
@@ -169,7 +169,7 @@ struct ShoppingListView: View {
     // アイテムの並び替え
     private func moveItem(from source: IndexSet, to destination: Int) {
         store.items.move(fromOffsets: source, toOffset: destination)
-        store.save()
+        store.saveDebounced()
     }
 }
 
