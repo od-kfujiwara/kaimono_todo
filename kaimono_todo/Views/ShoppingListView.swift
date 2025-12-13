@@ -28,6 +28,19 @@ struct ShoppingListView: View {
             }
             .listStyle(.plain)
             .environment(\.editMode, .constant(.active))
+            .overlay {
+                if store.items.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "cart")
+                            .font(.system(size: 50))
+                            .foregroundColor(.gray.opacity(0.5))
+                        Text("右上の + ボタンから\nアイテムを登録できます")
+                            .font(.body)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: deleteCompleted) {

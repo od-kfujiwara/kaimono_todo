@@ -22,8 +22,8 @@ class ShoppingListStore: ObservableObject {
     init(listId: Int) {
         self.saveKey = "shopping_items_\(listId)"
         load()
-        // 初回起動時はサンプルデータを表示
-        if items.isEmpty {
+        // 初回起動時、リスト1のみサンプルデータを表示
+        if items.isEmpty && listId == 0 {
             items = [
                 ShoppingItem(text: "牛乳"),
                 ShoppingItem(text: "卵"),
