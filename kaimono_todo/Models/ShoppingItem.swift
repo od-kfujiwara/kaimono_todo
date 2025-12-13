@@ -17,9 +17,10 @@ struct ShoppingItem: Identifiable, Codable {
 // 買い物リストを管理するストア
 class ShoppingListStore: ObservableObject {
     @Published var items: [ShoppingItem] = []
-    private let saveKey = "shopping_items"
+    private let saveKey: String
 
-    init() {
+    init(listId: Int) {
+        self.saveKey = "shopping_items_\(listId)"
         load()
         // 初回起動時はサンプルデータを表示
         if items.isEmpty {

@@ -1,10 +1,14 @@
 import SwiftUI
 
 struct ShoppingListView: View {
-    @StateObject private var store = ShoppingListStore()
+    @StateObject private var store: ShoppingListStore
     @State private var editingItemId: UUID?
     @FocusState private var focusedItemId: UUID?
     @State private var isSubmitting = false
+
+    init(listId: Int) {
+        _store = StateObject(wrappedValue: ShoppingListStore(listId: listId))
+    }
 
     var body: some View {
         NavigationStack {
@@ -140,5 +144,5 @@ struct ShoppingListView: View {
 }
 
 #Preview {
-    ShoppingListView()
+    ShoppingListView(listId: 0)
 }
