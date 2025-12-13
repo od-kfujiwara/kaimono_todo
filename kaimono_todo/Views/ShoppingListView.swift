@@ -5,7 +5,11 @@ struct ShoppingListView: View {
     @State private var editingItemId: UUID?
     @FocusState private var focusedItemId: UUID?
     @State private var isSubmitting = false
+    @State private var showOnboardingHint = false
+    @State private var tourStage: TourStage = .done
 
+    private let onboardingHintKey = "app_onboarding_hint_seen"
+    private let tourStageKey = "onboarding_tour_stage"
     init(listId: Int) {
         _store = StateObject(wrappedValue: ShoppingListStore(listId: listId))
     }
@@ -41,14 +45,53 @@ struct ShoppingListView: View {
                     }
                 }
             }
+            .overlay(alignment: .topTrailing) {
+                if tourStage == .addFromPlus {
+                    calloutBubble(title: TourCopy.addTitle,
+                                  iconName: "plus",
+                                  color: .red,
+                                  arrowOffset: 220,
+                                  width: 200)
+                        .padding(.trailing, 12)
+                        .padding(.top, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(2)
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                if tourStage == .longPressEdit {
+                    calloutBubble(title: TourCopy.editTitle,
+                                  iconName: "hand.point.up.left",
+                                  color: .red,
+                                  arrowOffset: 32,
+                                  width: 200)
+                        .padding(.leading, 12)
+                        .padding(.top, 80)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(2)
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                if shouldShowDeleteCallout {
+                    calloutBubble(title: TourCopy.deleteTitle,
+                                  iconName: "trash",
+                                  color: .red,
+                                  arrowOffset: 32,
+                                  width: 200)
+                        .padding(.leading, 12)
+                        .padding(.top, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(2)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(action: deleteCompleted) {
+                    Button(action: deleteButtonTapped) {
                         Image(systemName: "trash")
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: addItem) {
+                    Button(action: addItemTapped) {
                         Image(systemName: "plus")
                     }
                 }
@@ -90,6 +133,14 @@ struct ShoppingListView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             focusedItemId = nil
+            if showOnboardingHint {
+                markOnboardingHintSeen()
+            }
+            advanceTourFromTap()
+        }
+        .onAppear {
+            showOnboardingHintIfNeeded()
+            loadTourStageIfNeeded()
         }
     }
 
@@ -112,6 +163,9 @@ struct ShoppingListView: View {
     private func startEditing(_ item: ShoppingItem) {
         editingItemId = item.id
         focusedItemId = item.id
+        if tourStage == .longPressEdit {
+            advanceTour(to: .deleteOnlyCompleted)
+        }
     }
 
     // テキスト更新
@@ -137,10 +191,25 @@ struct ShoppingListView: View {
         }
     }
 
+    private func addItemTapped() {
+        addItem()
+        if tourStage == .addFromPlus {
+            advanceTour(to: .longPressEdit)
+        }
+    }
+
     // 完了済みアイテムを削除
     private func deleteCompleted() {
         store.items.removeAll { $0.isCompleted }
         store.save()
+    }
+
+    private func deleteButtonTapped() {
+        deleteCompleted()
+        if tourStage == .deleteOnlyCompleted {
+            markOnboardingHintSeen()
+            advanceTour(to: .done)
+        }
     }
 
     // Returnキーで次のアイテム追加
@@ -171,8 +240,160 @@ struct ShoppingListView: View {
         store.items.move(fromOffsets: source, toOffset: destination)
         store.saveDebounced()
     }
+
+    private func showOnboardingHintIfNeeded() {
+        let hasSeen = UserDefaults.standard.bool(forKey: onboardingHintKey)
+        showOnboardingHint = !hasSeen
+    }
+
+    private func markOnboardingHintSeen() {
+        UserDefaults.standard.set(true, forKey: onboardingHintKey)
+        showOnboardingHint = false
+    }
+
+    // オンボーディング表示制御
+    private func loadTourStageIfNeeded() {
+        if let saved = UserDefaults.standard.string(forKey: tourStageKey),
+           let stage = TourStage(rawValue: saved) {
+            tourStage = stage
+        } else {
+            tourStage = .addFromPlus
+        }
+    }
+
+    private func advanceTour(to next: TourStage) {
+        tourStage = next
+        if next == .deleteOnlyCompleted {
+            showOnboardingHint = true
+        }
+        UserDefaults.standard.set(next.rawValue, forKey: tourStageKey)
+    }
+
+    private var shouldShowDeleteCallout: Bool {
+        (tourStage == .done && showOnboardingHint) || tourStage == .deleteOnlyCompleted
+    }
+
+    private func advanceTourFromTap() {
+        switch tourStage {
+        case .addFromPlus:
+            advanceTour(to: .longPressEdit)
+        case .longPressEdit:
+            advanceTour(to: .deleteOnlyCompleted)
+        case .deleteOnlyCompleted:
+            markOnboardingHintSeen()
+            advanceTour(to: .done)
+        case .done:
+            break
+        }
+    }
+
+    @ViewBuilder
+    // 各ツアー/ヒントで共通の吹き出し
+    private func calloutBubble(title: String, iconName: String, color: Color, arrowOffset: CGFloat, width: CGFloat? = nil) -> some View {
+        VStack(alignment: .center, spacing: 10) {
+            Image(systemName: iconName)
+                .font(.system(size: 30, weight: .semibold))
+                .foregroundColor(color)
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, 15)
+        .padding(.vertical, 30)
+        .frame(width: width, alignment: .center)
+        .background(
+            SpeechBubble(cornerRadius: 30, arrowSize: CGSize(width: 16, height: 10), arrowOffset: arrowOffset)
+                .fill(Color(.secondarySystemBackground))
+        )
+        .overlay(
+            SpeechBubble(cornerRadius: 30, arrowSize: CGSize(width: 16, height: 10), arrowOffset: arrowOffset)
+                .stroke(Color.gray.opacity(0.35), lineWidth: 2)
+        )
+        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .allowsHitTesting(true)
+    }
 }
 
 #Preview {
     ShoppingListView(listId: 0)
+}
+
+private enum TourStage: String {
+    case addFromPlus
+    case longPressEdit
+    case deleteOnlyCompleted
+    case done
+
+    var message: String {
+        switch self {
+        case .addFromPlus:
+            return TourCopy.addTitle
+        case .longPressEdit:
+            return TourCopy.editTitle
+        case .deleteOnlyCompleted:
+            return TourCopy.deleteTitle
+        case .done:
+            return ""
+        }
+    }
+}
+
+// ツアー文言を1か所に集約
+private enum TourCopy {
+    static let addTitle = "＋からアイテムを\n追加できます"
+    static let editTitle = "アイテムを長押しすると編集できます"
+    static let deleteTitle = "完了にした項目だけ\n削除できます"
+}
+
+// 吹き出し背景（上側に矢印）
+private struct SpeechBubble: Shape {
+    let cornerRadius: CGFloat
+    let arrowSize: CGSize
+    let arrowOffset: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let arrowWidth = arrowSize.width
+        let arrowHeight = arrowSize.height
+        let minStart = rect.minX + arrowWidth / 2
+        let arrowStartX = min(max(rect.minX + arrowOffset, minStart), rect.maxX - cornerRadius - arrowWidth)
+
+        var path = Path()
+
+        path.move(to: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + arrowHeight))
+        path.addLine(to: CGPoint(x: arrowStartX, y: rect.minY + arrowHeight))
+        path.addLine(to: CGPoint(x: arrowStartX + arrowWidth / 2, y: rect.minY))
+        path.addLine(to: CGPoint(x: arrowStartX + arrowWidth, y: rect.minY + arrowHeight))
+        path.addLine(to: CGPoint(x: rect.maxX - cornerRadius, y: rect.minY + arrowHeight))
+
+        path.addArc(center: CGPoint(x: rect.maxX - cornerRadius, y: rect.minY + arrowHeight + cornerRadius),
+                    radius: cornerRadius,
+                    startAngle: .degrees(270),
+                    endAngle: .degrees(0),
+                    clockwise: false)
+
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - cornerRadius))
+        path.addArc(center: CGPoint(x: rect.maxX - cornerRadius, y: rect.maxY - cornerRadius),
+                    radius: cornerRadius,
+                    startAngle: .degrees(0),
+                    endAngle: .degrees(90),
+                    clockwise: false)
+
+        path.addLine(to: CGPoint(x: rect.minX + cornerRadius, y: rect.maxY))
+        path.addArc(center: CGPoint(x: rect.minX + cornerRadius, y: rect.maxY - cornerRadius),
+                    radius: cornerRadius,
+                    startAngle: .degrees(90),
+                    endAngle: .degrees(180),
+                    clockwise: false)
+
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + arrowHeight + cornerRadius))
+        path.addArc(center: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + arrowHeight + cornerRadius),
+                    radius: cornerRadius,
+                    startAngle: .degrees(180),
+                    endAngle: .degrees(270),
+                    clockwise: false)
+
+        path.closeSubpath()
+        return path
+    }
 }

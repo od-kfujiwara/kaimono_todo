@@ -32,14 +32,9 @@ struct SettingsView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
-                            Spacer()
-                            Button("OK") {
-                                settings.hasSeenIconHint = true
-                                showIconHint = false
-                            }
-                            .font(.subheadline.weight(.semibold))
                         }
                         .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.blue.opacity(0.08))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
