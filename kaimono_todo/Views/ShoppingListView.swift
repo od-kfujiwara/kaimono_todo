@@ -76,7 +76,7 @@ struct ShoppingListView: View {
                     calloutBubble(title: TourCopy.deleteTitle,
                                   iconName: "trash",
                                   color: .appAccent,
-                                  arrowOffset: 20,
+                                  arrowOffset: 32,
                                   width: 200)
                         .padding(.leading, 12)
                         .padding(.top, 8)
