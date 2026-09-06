@@ -1,0 +1,5 @@
+# Xcode
+build/
+
+# macOS
+.DS_Store
